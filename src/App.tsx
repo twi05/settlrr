@@ -1,18 +1,20 @@
-
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import './App.css'
+import { Provider } from "react-redux";
+import CreateGroup from "./pages/CreateGroup";
+import GroupPage from "./pages/GroupPage";
+import { store } from "./store/store";
 
 function App() {
-
   return (
-<BrowserRouter>
-      <Routes>
-        <Route path="/" element={<CreateGroup />} />
-        <Route path="/g/:groupId" element={<GroupPage />} />
-      </Routes>
+    <BrowserRouter>
+      <Provider store={store}>
+        <Routes>
+          <Route path="/" element={<CreateGroup />} />
+          <Route path="/g/:groupId" element={<GroupPage />} />
+        </Routes>
+      </Provider>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;
