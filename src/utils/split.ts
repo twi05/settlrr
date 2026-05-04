@@ -28,26 +28,40 @@ export interface Transfer {
 
 const EPS = 0.005;
 
-/** Greedy minimum cash flow settlement. */
-export function computeSettlements(balances: Record<string, number>): Transfer[] {
-  const debtors: { id: string; amount: number }[] = [];
-  const creditors: { id: string; amount: number }[] = [];
+type Side = { id: string; amount: number };
 
+function roundMoney(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+function moneyToCents(n: number): number {
+  return Math.round(n * 100);
+}
+
+function partitionSides(balances: Record<string, number>): {
+  debtors: Side[];
+  creditors: Side[];
+} {
+  const debtors: Side[] = [];
+  const creditors: Side[] = [];
   for (const [id, bal] of Object.entries(balances)) {
     if (bal < -EPS) debtors.push({ id, amount: -bal });
     else if (bal > EPS) creditors.push({ id, amount: bal });
   }
+  return { debtors, creditors };
+}
 
-  debtors.sort((a, b) => b.amount - a.amount);
-  creditors.sort((a, b) => b.amount - a.amount);
-
+/**
+ * Greedy “largest debtor ↔ largest creditor” matching on mutable side lists.
+ */
+function greedyFromSides(debtors: Side[], creditors: Side[]): Transfer[] {
   const transfers: Transfer[] = [];
   let i = 0;
   let j = 0;
 
   while (i < debtors.length && j < creditors.length) {
     const pay = Math.min(debtors[i].amount, creditors[j].amount);
-    const rounded = Math.round(pay * 100) / 100;
+    const rounded = roundMoney(pay);
     if (rounded >= 0.01) {
       transfers.push({
         from: debtors[i].id,
@@ -62,4 +76,66 @@ export function computeSettlements(balances: Record<string, number>): Transfer[]
   }
 
   return transfers;
+}
+
+/**
+ * Greedy “largest debtor ↔ largest creditor” matching.
+ * Good for explainability; pure greedy without an exact-match pass first.
+ */
+export function computeSettlementsGreedy(
+  balances: Record<string, number>,
+): Transfer[] {
+  const { debtors, creditors } = partitionSides(balances);
+  const d = debtors.map((x) => ({ ...x }));
+  const c = creditors.map((x) => ({ ...x }));
+  d.sort((a, b) => b.amount - a.amount);
+  c.sort((a, b) => b.amount - a.amount);
+  return greedyFromSides(d, c);
+}
+
+/**
+ * Almost-optimal (MVP-friendly): split debtors / creditors, pair **exact**
+ * amounts first (bucket by rupee-paise cents), then run greedy on the rest.
+ */
+export function computeSettlementsOptimal(
+  balances: Record<string, number>,
+): Transfer[] {
+  const { debtors, creditors } = partitionSides(balances);
+
+  const buckets = new Map<number, Side[]>();
+  for (const c of creditors) {
+    const key = moneyToCents(c.amount);
+    const arr = buckets.get(key);
+    if (arr) arr.push({ ...c });
+    else buckets.set(key, [{ ...c }]);
+  }
+
+  const exactTransfers: Transfer[] = [];
+  const debtorsLeft: Side[] = [];
+
+  for (const d of debtors) {
+    const key = moneyToCents(d.amount);
+    const bucket = buckets.get(key);
+    if (bucket && bucket.length > 0) {
+      const c = bucket.pop()!;
+      if (bucket.length === 0) buckets.delete(key);
+      exactTransfers.push({
+        from: d.id,
+        to: c.id,
+        amount: roundMoney(d.amount),
+      });
+    } else {
+      debtorsLeft.push({ ...d });
+    }
+  }
+
+  const creditorsLeft: Side[] = [];
+  for (const [, bucket] of buckets) {
+    for (const c of bucket) creditorsLeft.push(c);
+  }
+
+  debtorsLeft.sort((a, b) => b.amount - a.amount);
+  creditorsLeft.sort((a, b) => b.amount - a.amount);
+
+  return [...exactTransfers, ...greedyFromSides(debtorsLeft, creditorsLeft)];
 }

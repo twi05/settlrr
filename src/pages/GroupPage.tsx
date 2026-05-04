@@ -10,7 +10,11 @@ import {
   isDesktopChrome,
   isValidUpiId,
 } from "@/lib/upi";
-import { computeBalances, computeSettlements } from "@/utils/split";
+import {
+  computeBalances,
+  computeSettlementsGreedy,
+  computeSettlementsOptimal,
+} from "@/utils/split";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   addMember,
@@ -80,6 +84,8 @@ export default function GroupPage() {
   const [isLocalBootstrap, setIsLocalBootstrap] = useState(false);
   const [selfId, setSelfId] = useState<string | null>(null);
   const [showSettlements, setShowSettlements] = useState(false);
+  /** When true (default), exact-match pass then greedy; when false, greedy only. */
+  const [optimalSettlement, setOptimalSettlement] = useState(true);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -135,10 +141,11 @@ export default function GroupPage() {
 
   const myBalance = selfId ? balances[selfId] ?? 0 : 0;
 
-  const settlements = useMemo(
-    () => computeSettlements(balances),
-    [balances],
-  );
+  const settlements = useMemo(() => {
+    return optimalSettlement
+      ? computeSettlementsOptimal(balances)
+      : computeSettlementsGreedy(balances);
+  }, [balances, optimalSettlement]);
 
   const sortedTransactions = useMemo(
     () => [...transactions].sort((a, b) => b.createdAt - a.createdAt),
@@ -388,6 +395,25 @@ export default function GroupPage() {
         {showSettlements && (
           <div className={cardClass}>
             <div className="flex flex-col gap-3 p-4">
+              <div className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
+                <div className="flex flex-col gap-0.5">
+                  <label
+                    htmlFor="settlement-optimal"
+                    className="text-sm font-medium text-gray-800"
+                  >
+                    Optimal balancing
+                  </label>
+                  <p className="text-xs text-gray-600">
+                    On: match exact amounts first, then greedy. Off: greedy only
+                    (largest debts first).
+                  </p>
+                </div>
+                <ToggleSwitch
+                  id="settlement-optimal"
+                  checked={optimalSettlement}
+                  onCheckedChange={setOptimalSettlement}
+                />
+              </div>
               <p className="text-sm font-medium text-gray-800">Settle up</p>
               {settlements.length === 0 ? (
                 <p className="text-sm text-gray-600">Everyone is even.</p>
@@ -414,11 +440,16 @@ export default function GroupPage() {
                         </div>
                         {(() => {
                           const payee = members.find((m) => m.id === s.to);
-                          const canPay = Boolean(payee?.upiId);
-                          return (
+                          const canPay = payee;
+                          const shouldShow = selfId === s.to;
+                          console.log('canpay',s, selfId, shouldShow)
+
+                          if (!shouldShow) return null; // 👈 hides button completely
+                           return (
                             <button
                               type="button"
-                              disabled={!canPay}
+                              
+                              disabled={!canPay} 
                               onClick={() => payee && handlePayNow(payee, s.amount)}
                               className={`inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium transition-colors ${
                                 canPay
