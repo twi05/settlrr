@@ -16,7 +16,7 @@ export function createUpiDeepLink({
   upiId,
   payeeName,
   amount,
-  note = "SplitNow",
+  note = "Settlrr",
 }: UpiLinkInput): string | null {
   if (!isValidUpiId(upiId) || amount <= 0) return null;
   const rounded = Math.round(amount * 100) / 100;

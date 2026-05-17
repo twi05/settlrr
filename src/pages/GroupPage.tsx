@@ -29,13 +29,32 @@ import type { Member, Transaction } from "@/types";
 const BAL_EPS = 0.005;
 
 const cardClass =
-  "rounded-xl border border-gray-200 bg-white text-gray-800 shadow-sm";
+  "rounded-2xl border border-gray-200 bg-white text-gray-800 shadow-sm";
 
 const btnPrimary =
-  "inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
+  "inline-flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-500 hover:shadow-lg active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
 
 const btnSecondary =
-  "inline-flex shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
+  "inline-flex shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
+
+function initials(name: string) {
+  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+}
+
+const AVATAR_COLORS = [
+  "bg-violet-100 text-violet-700",
+  "bg-blue-100 text-blue-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-amber-100 text-amber-700",
+  "bg-rose-100 text-rose-700",
+  "bg-cyan-100 text-cyan-700",
+];
+
+function avatarColor(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
 
 function displayName(
   id: string,
@@ -189,7 +208,7 @@ export default function GroupPage() {
       upiId: toMember.upiId,
       payeeName: toMember.name,
       amount,
-      note: "SplitNow",
+      note: "Settlrr",
     });
     if (!deepLink) return;
     if (isDesktopChrome()) {
@@ -267,7 +286,7 @@ export default function GroupPage() {
 
   if (!groupId) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center text-gray-600">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center text-gray-500 text-sm">
         Invalid link
       </div>
     );
@@ -275,8 +294,9 @@ export default function GroupPage() {
 
   if (!hydrated) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center text-gray-600">
-        Loading…
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+        <p className="text-sm text-gray-500">Loading group…</p>
       </div>
     );
   }
@@ -285,17 +305,30 @@ export default function GroupPage() {
 
   if (!isJoined) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 flex flex-col items-center justify-center">
+        {/* Top branding */}
+        <div className="mb-6 flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 shadow-md shadow-blue-200">
+            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <span className="text-xl font-bold tracking-tight text-gray-900">Settlrr</span>
+        </div>
+
         <div className="w-full max-w-md space-y-3">
           {isLocalBootstrap && (
-            <div className={`${cardClass} p-4`}>
-              <p className="text-sm text-gray-800 font-medium">
-                This group is not in local storage yet.
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-sm font-medium text-amber-800">First time here?</p>
+              <p className="mt-0.5 text-sm text-amber-700">
+                Add yourself to start tracking expenses with this group on this device.
               </p>
-              <p className="text-sm text-gray-600 mt-1">
-                Create a new user to join this group and start tracking expenses
-                on this device.
-              </p>
+            </div>
+          )}
+          {!isLocalBootstrap && (
+            <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-center">
+              <p className="text-sm font-semibold text-blue-800">{group.name}</p>
+              <p className="text-xs text-blue-600 mt-0.5">{members.length} {members.length === 1 ? "member" : "members"} · Tap your name to join</p>
             </div>
           )}
           <JoinForm
@@ -317,205 +350,241 @@ export default function GroupPage() {
         ? { text: `You get ${formatInr(myBalance)}`, tone: "get" as const }
         : { text: "You're settled up", tone: "ok" as const };
 
-  const balanceCardExtra =
-    balanceLabel.tone === "owe"
-      ? "border-red-100 bg-red-50"
-      : balanceLabel.tone === "get"
-        ? "border-green-100 bg-green-50"
-        : "";
-
   return (
-    <div className="min-h-screen bg-gray-50 pb-28">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 pb-28">
+      {/* Top nav bar */}
+      <div className="sticky top-0 z-30 border-b border-gray-200/80 bg-white/90 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 shadow-sm">
+              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <span className="text-sm font-bold tracking-tight text-gray-900">Settlrr</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" className={btnSecondary} onClick={() => void copyShareLink()}>
+              {copied ? (
+                <span className="flex items-center gap-1 text-green-600">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Copied!
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                  Share
+                </span>
+              )}
+            </button>
+            <button type="button" className={btnSecondary} onClick={openSettings}>
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              <span className="ml-1">Settings</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="mx-auto flex max-w-lg flex-col gap-4 p-4">
-        <header className="flex flex-col gap-3">
-          <div className="flex items-start justify-between gap-3">
+        {/* Group hero */}
+        <div className="rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 shadow-lg shadow-blue-200">
+          <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-gray-800 leading-tight">
-                {group.name}
-              </h1>
-              <p className="mt-1 font-mono text-xs text-gray-500">{groupId}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className={btnSecondary}
-                onClick={() => void copyShareLink()}
-              >
-                {copied ? "Copied" : "Share"}
-              </button>
-              <button type="button" className={btnSecondary} onClick={openSettings}>
-                Settings
-              </button>
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-200">Group</p>
+              <h1 className="mt-1 text-2xl font-bold text-white leading-tight">{group.name}</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-lg bg-white/20 px-2.5 py-1 text-xs font-medium text-white">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg>
+                  Code: <span className="font-mono">{groupId}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-lg bg-white/20 px-2.5 py-1 text-xs font-medium text-white">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  {members.length} {members.length === 1 ? "member" : "members"}
+                </span>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div
-            className={`${cardClass} overflow-hidden ${balanceCardExtra}`}
-          >
-            <div className="p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-600">
-                Your balance
+        {/* Balance card */}
+        <div className={`${cardClass} overflow-hidden ${
+          balanceLabel.tone === "owe" ? "border-red-200" : balanceLabel.tone === "get" ? "border-green-200" : ""
+        }`}>
+          <div className={`px-5 py-4 ${
+            balanceLabel.tone === "owe" ? "bg-gradient-to-r from-red-50 to-rose-50" :
+            balanceLabel.tone === "get" ? "bg-gradient-to-r from-green-50 to-emerald-50" :
+            "bg-gradient-to-r from-gray-50 to-slate-50"
+          }`}>
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Your balance</p>
+            <p className={`mt-1.5 text-3xl font-bold ${
+              balanceLabel.tone === "owe" ? "text-red-500" :
+              balanceLabel.tone === "get" ? "text-green-600" :
+              "text-gray-800"
+            }`}>
+              {balanceLabel.text}
+            </p>
+            {balanceLabel.tone !== "ok" && (
+              <p className="mt-1 text-xs text-gray-500">
+                {balanceLabel.tone === "owe" ? "You owe money to the group" : "The group owes you money"}
               </p>
-              <p
-                className={`mt-1 text-2xl font-semibold ${
-                  balanceLabel.tone === "owe"
-                    ? "text-red-500"
-                    : balanceLabel.tone === "get"
-                      ? "text-green-600"
-                      : "text-gray-800"
-                }`}
-              >
-                {balanceLabel.text}
-              </p>
-            </div>
+            )}
           </div>
-        </header>
+        </div>
 
-        <div className={`${cardClass}`}>
-          <div className="flex items-center justify-between gap-4 p-4">
-            <div className="flex flex-col gap-0.5">
-              <label
-                htmlFor="settlements"
-                className="text-sm font-medium text-gray-800"
-              >
-                Show group balance
-              </label>
-              <p className="text-xs text-gray-600">
-                Who should pay whom to settle up
-              </p>
+        {/* Settle up toggle */}
+        <div className={cardClass}>
+          <div className="flex items-center justify-between gap-4 px-5 py-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Group settlements</p>
+              <p className="mt-0.5 text-xs text-gray-500">Who pays whom to settle all debts</p>
             </div>
-            <ToggleSwitch
-              id="settlements"
-              checked={showSettlements}
-              onCheckedChange={setShowSettlements}
-            />
+            <ToggleSwitch id="settlements" checked={showSettlements} onCheckedChange={setShowSettlements} />
           </div>
         </div>
 
         {showSettlements && (
           <div className={cardClass}>
-            <div className="flex flex-col gap-3 p-4">
-              <div className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
-                <div className="flex flex-col gap-0.5">
-                  <label
-                    htmlFor="settlement-optimal"
-                    className="text-sm font-medium text-gray-800"
-                  >
-                    Optimal balancing
-                  </label>
-                  <p className="text-xs text-gray-600">
-                    On: match exact amounts first, then greedy. Off: greedy only
-                    (largest debts first).
-                  </p>
+            <div className="flex flex-col gap-4 p-5">
+              <div className="flex items-center justify-between gap-4 rounded-xl bg-gray-50 px-4 py-3">
+                <div>
+                  <p className="text-xs font-semibold text-gray-700">Optimal balancing</p>
+                  <p className="mt-0.5 text-xs text-gray-500">Minimises number of transactions</p>
                 </div>
-                <ToggleSwitch
-                  id="settlement-optimal"
-                  checked={optimalSettlement}
-                  onCheckedChange={setOptimalSettlement}
-                />
+                <ToggleSwitch id="settlement-optimal" checked={optimalSettlement} onCheckedChange={setOptimalSettlement} />
               </div>
-              <p className="text-sm font-medium text-gray-800">Settle up</p>
-              {settlements.length === 0 ? (
-                <p className="text-sm text-gray-600">Everyone is even.</p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {settlements.map((s, i) => (
-                    <li
-                      key={`${s.from}-${s.to}-${i}`}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <span className="font-medium">
-                            {displayName(s.from, selfId, members)}
-                          </span>
-                          <span className="text-gray-600"> → </span>
-                          <span className="font-medium">
-                            {displayName(s.to, selfId, members)}
-                          </span>
-                          <span className="text-gray-600">
-                            {" "}
-                            {formatInr(s.amount)}
-                          </span>
-                        </div>
-                        {(() => {
-                          const payee = members.find((m) => m.id === s.to);
-                          const canPay = payee;
-                          const shouldShow = selfId === s.to;
-                          console.log('canpay',s, selfId, shouldShow)
 
-                          if (!shouldShow) return null; // 👈 hides button completely
-                           return (
+              <div>
+                <p className="mb-3 text-sm font-semibold text-gray-800">Settle up</p>
+                {settlements.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-green-200 bg-green-50 py-6 text-center">
+                    <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <p className="text-sm font-medium text-green-700">Everyone is settled up!</p>
+                  </div>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {settlements.map((s, i) => {
+                      const payee = members.find((m) => m.id === s.to);
+                      const doSelfHaveToPay = selfId === s.from;
+                      const canPay = payee?.upiId && doSelfHaveToPay;
+                      return (
+                        <li key={`${s.from}-${s.to}-${i}`} className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${
+                          doSelfHaveToPay ? "border-red-100 bg-red-50" : "border-gray-100 bg-white"
+                        }`}>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${avatarColor(s.from)}`}>
+                              {initials(displayName(s.from, selfId, members))}
+                            </span>
+                            <div className="min-w-0">
+                              <span className="font-medium text-gray-900">{displayName(s.from, selfId, members)}</span>
+                              <span className="mx-1.5 text-gray-400">→</span>
+                              <span className="font-medium text-gray-900">{displayName(s.to, selfId, members)}</span>
+                              <p className="text-xs text-gray-500 mt-0.5">{formatInr(s.amount)}</p>
+                            </div>
+                          </div>
+                          {canPay && (
                             <button
                               type="button"
-                              
-                              disabled={!canPay} 
                               onClick={() => payee && handlePayNow(payee, s.amount)}
-                              className={`inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-medium transition-colors ${
-                                canPay
-                                  ? "bg-blue-600 text-white hover:bg-blue-500"
-                                  : "cursor-not-allowed bg-gray-100 text-gray-400"
-                              }`}
+                              className="shrink-0 inline-flex h-8 items-center justify-center rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white transition-all hover:bg-blue-500 active:scale-95"
                             >
                               Pay Now
                             </button>
-                          );
-                        })()}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
         )}
 
-        <section className="flex flex-col gap-2">
-          <h2 className="px-0.5 text-sm font-medium text-gray-800">Members</h2>
+        {/* Members */}
+        <section className="flex flex-col gap-3">
+          <h2 className="px-0.5 text-sm font-semibold text-gray-700">Members</h2>
           <div className="flex flex-wrap gap-2">
             {members.map((m) => (
-              <span
+              <div
                 key={m.id}
-                className={`inline-flex items-center rounded-full border px-3 py-1 text-sm ${
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${
                   m.id === selfId
-                    ? "border-blue-200 bg-blue-50 font-medium text-blue-800"
-                    : "border-gray-200 bg-white text-gray-800 shadow-sm"
+                    ? "border-blue-200 bg-blue-50 text-blue-800"
+                    : "border-gray-200 bg-white text-gray-700 shadow-sm"
                 }`}
               >
-                {m.name}
-                {m.id === selfId ? " · You" : ""}
-              </span>
+                <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${avatarColor(m.id)}`}>
+                  {initials(m.name)}
+                </span>
+                <span className={m.id === selfId ? "font-semibold" : "font-medium"}>{m.name}</span>
+                {m.id === selfId && <span className="text-xs text-blue-500">You</span>}
+                {m.upiId && (
+                  <span className="text-[10px] text-green-600" title="UPI linked">●</span>
+                )}
+              </div>
             ))}
           </div>
         </section>
 
+        {/* Transactions */}
         <section className="flex flex-col gap-3">
-          <h2 className="px-0.5 text-sm font-medium text-gray-800">
-            Transactions
-          </h2>
+          <div className="flex items-center justify-between px-0.5">
+            <h2 className="text-sm font-semibold text-gray-700">Expenses</h2>
+            {sortedTransactions.length > 0 && (
+              <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                {sortedTransactions.length}
+              </span>
+            )}
+          </div>
           {sortedTransactions.length === 0 ? (
-            <div className={`${cardClass} border-dashed`}>
-              <div className="p-6 text-center text-sm text-gray-600">
-                No expenses yet. Add one below.
+            <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-gray-200 py-10 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100">
+                <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">No expenses yet</p>
+                <p className="mt-0.5 text-xs text-gray-400">Tap "Add expense" below to get started.</p>
               </div>
             </div>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-2.5">
               {sortedTransactions.map((t) => {
                 const payer = members.find((m) => m.id === t.paidBy);
-                const splitNames = t.splitBetween.map((id) =>
-                  displayName(id, selfId, members),
-                );
+                const splitNames = t.splitBetween.map((id) => displayName(id, selfId, members));
+                const perPerson = t.splitBetween.length > 0 ? t.amount / t.splitBetween.length : 0;
+                const youAreInvolved = t.splitBetween.includes(selfId ?? "");
                 return (
                   <li key={t.id}>
-                    <div className={cardClass}>
-                      <div className="flex flex-col gap-1 p-4">
-                        <p className="font-medium text-gray-800">
-                          {payer?.name ?? "Someone"} paid {formatInr(t.amount)}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Split between {splitNames.join(", ")}
-                        </p>
+                    <div className={`${cardClass} ${youAreInvolved ? "border-blue-100" : ""}`}>
+                      <div className="flex items-start gap-3 p-4">
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${avatarColor(t.paidBy)}`}>
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {payer?.id === selfId ? "You" : payer?.name ?? "Someone"} paid
+                              </p>
+                              <p className="mt-0.5 text-xs text-gray-500">
+                                Split with {splitNames.join(", ")}
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="font-bold text-gray-900">{formatInr(t.amount)}</p>
+                              <p className="text-xs text-gray-400">{formatInr(perPerson)} each</p>
+                            </div>
+                          </div>
+                          {youAreInvolved && (
+                            <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                              You're in this
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </li>
@@ -526,13 +595,13 @@ export default function GroupPage() {
         </section>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-gray-50/95 p-4 backdrop-blur-sm">
+      {/* Sticky footer */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200/80 bg-white/95 p-4 backdrop-blur-sm">
         <div className="mx-auto max-w-lg">
-          <button
-            type="button"
-            className={btnPrimary}
-            onClick={() => setExpenseOpen(true)}
-          >
+          <button type="button" className={btnPrimary} onClick={() => setExpenseOpen(true)}>
+            <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
             Add expense
           </button>
         </div>
@@ -549,80 +618,77 @@ export default function GroupPage() {
 
       {settingsOpen && currentMember && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
           role="presentation"
           onClick={() => setSettingsOpen(false)}
         >
           <div
-            className="relative z-10 flex w-full max-w-lg flex-col rounded-t-xl border border-gray-200 bg-white shadow-lg sm:rounded-xl"
+            className="relative z-10 flex w-full max-w-lg flex-col rounded-t-2xl border border-gray-200 bg-white shadow-2xl sm:rounded-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="settings-dialog-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              type="button"
-              className="absolute right-3 top-3 rounded-md p-1 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-              onClick={() => setSettingsOpen(false)}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <form onSubmit={handleSaveSettings} className="p-4 pt-10 sm:p-6 sm:pt-8">
-              <div className="mb-4 flex flex-col gap-1">
-                <h2 id="settings-dialog-title" className="text-lg font-semibold text-gray-800">
-                  Your settings
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Update your name and UPI details.
+            <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
+              <div>
+                <h2 id="settings-dialog-title" className="text-lg font-bold text-gray-900">Your settings</h2>
+                <p className="mt-0.5 text-sm text-gray-500">Update your name and UPI details.</p>
+              </div>
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                onClick={() => setSettingsOpen(false)}
+                aria-label="Close"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <form onSubmit={handleSaveSettings} className="flex flex-col gap-5 p-6">
+              <div className="grid gap-2">
+                <label htmlFor="settings-name" className="text-sm font-semibold text-gray-700">Name</label>
+                <input
+                  id="settings-name"
+                  value={settingsName}
+                  onChange={(e) => setSettingsName(e.target.value)}
+                  className="flex h-12 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="Your name"
+                  autoComplete="name"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="settings-upi" className="text-sm font-semibold text-gray-700">
+                  UPI ID
+                  <span className="ml-1.5 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-500">optional</span>
+                </label>
+                <input
+                  id="settings-upi"
+                  value={settingsUpiId}
+                  onChange={(e) => setSettingsUpiId(e.target.value)}
+                  className="flex h-12 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  placeholder="rahul@oksbi"
+                  autoComplete="off"
+                />
+                <p className="text-xs text-gray-400">Lets others pay you directly via UPI.</p>
+              </div>
+              {settingsError && (
+                <p className="flex items-center gap-1 text-xs text-red-500">
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  {settingsError}
                 </p>
-              </div>
-
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <label htmlFor="settings-name" className="text-sm font-medium text-gray-800">
-                    Name
-                  </label>
-                  <input
-                    id="settings-name"
-                    value={settingsName}
-                    onChange={(e) => setSettingsName(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Your name"
-                    autoComplete="name"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label htmlFor="settings-upi" className="text-sm font-medium text-gray-800">
-                    UPI ID (optional)
-                  </label>
-                  <input
-                    id="settings-upi"
-                    value={settingsUpiId}
-                    onChange={(e) => setSettingsUpiId(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="rahul@oksbi"
-                    autoComplete="off"
-                  />
-                </div>
-                {settingsError && (
-                  <p className="text-xs text-red-500">{settingsError}</p>
-                )}
-              </div>
-
-              <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              )}
+              <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
                 <button
                   type="button"
-                  className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-4 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="inline-flex h-12 items-center justify-center rounded-xl border border-gray-200 bg-white px-5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   onClick={() => setSettingsOpen(false)}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex h-10 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-500 hover:shadow-lg active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  Save
+                  Save changes
                 </button>
               </div>
             </form>
@@ -632,49 +698,58 @@ export default function GroupPage() {
 
       {qrOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
           role="presentation"
           onClick={() => setQrOpen(false)}
         >
           <div
-            className="relative z-10 flex w-full max-w-lg flex-col rounded-t-xl border border-gray-200 bg-white shadow-lg sm:rounded-xl"
+            className="relative z-10 flex w-full max-w-lg flex-col rounded-t-2xl border border-gray-200 bg-white shadow-2xl sm:rounded-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="qr-dialog-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              type="button"
-              className="absolute right-3 top-3 rounded-md p-1 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-              onClick={() => setQrOpen(false)}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <div className="p-4 pt-10 sm:p-6 sm:pt-8">
-              <div className="mb-4">
-                <h2 id="qr-dialog-title" className="text-lg font-semibold text-gray-800">
-                  Scan to pay
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Scan this QR in any UPI app to pay {qrPayeeName}{" "}
-                  {formatInr(qrAmount)}.
+            <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
+              <div>
+                <h2 id="qr-dialog-title" className="text-lg font-bold text-gray-900">Scan to pay</h2>
+                <p className="mt-0.5 text-sm text-gray-500">
+                  Scan in any UPI app to pay {qrPayeeName} {formatInr(qrAmount)}.
                 </p>
               </div>
-              <div className="flex flex-col items-center gap-3">
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                onClick={() => setQrOpen(false)}
+                aria-label="Close"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex flex-col items-center gap-4 p-6">
+              <div className="rounded-2xl border-2 border-gray-100 bg-white p-3 shadow-inner">
                 <img
                   src={createUpiQrUrl(qrDeepLink)}
                   alt="UPI payment QR code"
-                  className="h-64 w-64 rounded-lg border border-gray-200 bg-white p-2"
+                  className="h-64 w-64 rounded-xl"
                 />
-                <button
-                  type="button"
-                  className="inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-4 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  onClick={() => void handleCopyQrLink()}
-                >
-                  {qrLinkCopied ? "Link copied" : "Copy UPI link"}
-                </button>
               </div>
+              <button
+                type="button"
+                className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => void handleCopyQrLink()}
+              >
+                {qrLinkCopied ? (
+                  <span className="flex items-center gap-2 text-green-600">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    Link copied!
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    Copy UPI link
+                  </span>
+                )}
+              </button>
             </div>
           </div>
         </div>

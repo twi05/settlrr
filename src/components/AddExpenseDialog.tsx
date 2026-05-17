@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import type { Member } from "@/types";
 
 const inputClass =
-  "flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
+  "flex h-12 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors";
 
 const btnPrimary =
-  "inline-flex h-10 shrink-0 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
+  "inline-flex h-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-500 hover:shadow-lg active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
 
 const btnSecondary =
-  "inline-flex h-10 items-center justify-center rounded-md border border-gray-200 bg-white px-4 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
+  "inline-flex h-12 items-center justify-center rounded-xl border border-gray-200 bg-white px-5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
 
 type Props = {
   open: boolean;
@@ -79,114 +79,126 @@ export function AddExpenseDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
       role="presentation"
       onClick={() => onOpenChange(false)}
     >
       <div
-        className="relative z-10 flex max-h-[min(90vh,640px)] w-full max-w-lg flex-col overflow-y-auto rounded-t-xl border border-gray-200 bg-white shadow-lg sm:rounded-xl"
+        className="relative z-10 flex max-h-[min(92vh,680px)] w-full max-w-lg flex-col overflow-y-auto rounded-t-2xl border border-gray-200 bg-white shadow-2xl sm:rounded-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="expense-dialog-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          className="absolute right-3 top-3 rounded-md p-1 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-          onClick={() => onOpenChange(false)}
-          aria-label="Close"
-        >
-          ✕
-        </button>
-        <form onSubmit={handleSubmit} className="p-4 pt-10 sm:p-6 sm:pt-8">
-          <div className="mb-4 flex flex-col gap-1">
-            <h2
-              id="expense-dialog-title"
-              className="text-lg font-semibold text-gray-800"
-            >
+        {/* Dialog header */}
+        <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
+          <div>
+            <h2 id="expense-dialog-title" className="text-lg font-bold text-gray-900">
               Add expense
             </h2>
-            <p className="text-sm text-gray-600">
-              Enter amount, who paid, and who shares the cost.
+            <p className="mt-0.5 text-sm text-gray-500">
+              Enter the amount, who paid, and who shares it.
             </p>
           </div>
-          <div className="grid gap-4 py-2">
-            <div className="grid gap-2">
-              <label htmlFor="amount" className="text-sm font-medium text-gray-800">
-                Amount
-              </label>
+          <button
+            type="button"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-6">
+          {/* Amount */}
+          <div className="grid gap-2">
+            <label htmlFor="amount" className="text-sm font-semibold text-gray-700">
+              Amount
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400">₹</span>
               <input
                 id="amount"
                 inputMode="decimal"
-                placeholder="0"
+                placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 autoComplete="off"
-                className={inputClass}
+                autoFocus
+                className={`${inputClass} pl-8 text-lg font-semibold`}
               />
             </div>
-            <div className="grid gap-2">
-              <label htmlFor="paid-by" className="text-sm font-medium text-gray-800">
-                Paid by
-              </label>
-              <select
-                id="paid-by"
-                value={paidBy}
-                onChange={(e) => setPaidBy(e.target.value)}
-                className={inputClass}
-              >
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
+          </div>
+
+          {/* Paid by */}
+          <div className="grid gap-2">
+            <label htmlFor="paid-by" className="text-sm font-semibold text-gray-700">
+              Paid by
+            </label>
+            <select
+              id="paid-by"
+              value={paidBy}
+              onChange={(e) => setPaidBy(e.target.value)}
+              className={inputClass}
+            >
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}{m.id === currentMemberId ? " (You)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Split between */}
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-700">Split between</span>
+              <span className="text-xs text-gray-400">{splitIds.size} selected</span>
             </div>
-            <div className="grid gap-2">
-              <span className="text-sm font-medium text-gray-800">
-                Split between
-              </span>
-              <div className="space-y-3 rounded-md border border-gray-200 bg-gray-50 p-3">
-                <div className="flex flex-col gap-3">
-                  {members.map((m) => (
-                    <label
-                      key={m.id}
-                      className="flex cursor-pointer items-center gap-3 text-sm text-gray-800"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={splitIds.has(m.id)}
-                        onChange={(e) => toggleSplit(m.id, e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span>{m.name}</span>
-                    </label>
-                  ))}
-                </div>
-                <div className="flex gap-2 pt-1">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 divide-y divide-gray-100 overflow-hidden">
+              {members.map((m) => (
+                <label
+                  key={m.id}
+                  className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-gray-100"
+                >
                   <input
-                    placeholder="New member name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    className={`${inputClass} flex-1`}
+                    type="checkbox"
+                    checked={splitIds.has(m.id)}
+                    onChange={(e) => toggleSplit(m.id, e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <button
-                    type="button"
-                    className={btnSecondary}
-                    onClick={handleAddPersonToSplit}
-                  >
-                    Add
-                  </button>
-                </div>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+                    {m.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="flex-1 text-sm font-medium text-gray-800">
+                    {m.name}{m.id === currentMemberId ? " (You)" : ""}
+                  </span>
+                </label>
+              ))}
+              <div className="flex gap-2 p-3 bg-white">
+                <input
+                  placeholder="Add someone new…"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddPersonToSplit())}
+                  className={`${inputClass} flex-1 h-10 text-sm`}
+                />
+                <button
+                  type="button"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
+                  onClick={handleAddPersonToSplit}
+                >
+                  Add
+                </button>
               </div>
             </div>
           </div>
-          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              className={btnSecondary}
-              onClick={() => onOpenChange(false)}
-            >
+
+          <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
+            <button type="button" className={btnSecondary} onClick={() => onOpenChange(false)}>
               Cancel
             </button>
             <button type="submit" className={btnPrimary}>
